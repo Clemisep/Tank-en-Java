@@ -1,155 +1,278 @@
+import java.awt.Color;
 import java.awt.event.KeyEvent;
 
 public class Tank {
     double posX;
     double posY;
-    public static double rotation;
-    public static int direction = 2;
+    double rotation;
     
-    public Tank(int posX, int posY)
+    double yant;
+    double ypos;
+    double diff;
+    
+    double rotsol;
+    double decalcanonX;
+    double decalcanonY;
+    
+    double addrot;
+    double posiX;
+    double posiY;
+    
+    boolean tirer;
+    boolean deplacer;
+    boolean tir = false;
+    boolean fin = false;
+    
+    int i = -1;
+    int solx;
+    
+    int vie;
+    int xVie;
+    int degat = 10;
+    
+    int balleX;
+    int balleY;
+    
+    Tank(int x, int y)
     {
-        this.posX = posX;
-        this.posY = posY;   
+        this.posX = x;
+        this.posY = y;
+        vie = 100;
+        xVie = 100;
     }
     
-    public void move()
+    public void deplacement(int min, int max)
     {
-        if(posX < 1000 && posX > 0)
+        if(deplacer == true)
         {
-           if(StdDraw.isKeyPressed(KeyEvent.VK_LEFT))
+            //On peut déplacer le tank entre la valeur min et max en abscisse
+            if(posX <= max && posX >= min)
             {
-                if(posX > 8)
+                if(StdDraw.isKeyPressed(KeyEvent.VK_LEFT))
                 {
-                    posX = posX - 8;
+                    //On bloque le tir pendant le déplacement
+                    tirer = false;
+                    if(posX > min + 5)
+                    {
+                        posX = posX - 5;
+                    }
+                    else
+                    {
+                        posX = min + 5;
+                    }
+                }
+                else if(StdDraw.isKeyPressed(KeyEvent.VK_RIGHT))
+                {
+                    //On bloque le tir pendant le déplacement
+                    tirer = false;
+                    if(posX < max - 5)
+                    {
+                        posX = posX + 5;
+                    }
+                    else
+                    {
+                        posX = max - 5;
+                    }
                 }
                 else
                 {
-                    posX = 8;
+                    tirer = true;
+                }
+                //Gestion de la rotation du canon
+                if(rotation > -10 && rotation < 80)
+                {
+                    if(StdDraw.isKeyPressed(KeyEvent.VK_UP) && rotation < 79)
+                    {
+                        rotation++;
+                    }
+                    else if(StdDraw.isKeyPressed(KeyEvent.VK_DOWN) && rotation > -9)
+                    {
+                        rotation--;
+                    }
                 }
             }
-            else if(StdDraw.isKeyPressed(KeyEvent.VK_RIGHT))
-            {
-                if(posX < 992)
-                {
-                    posX = posX + 8;
-                }
-                else
-                {
-                    posX = 992;
-                }
-            } 
         }
     }
     
-    public void showTank()
+    public void afficherTank(int x)
     {
-        posY = Sol.getPosY(posX) + 30;
-        if(StdDraw.isKeyPressed(KeyEvent.VK_LEFT))
+        //Pente du tank dû à la pente du sol
+        yant = Sol.getPosY(posX - 1);
+        ypos = Sol.getPosY(posX + 1);
+        diff = yant - ypos;
+        if(diff != 0)
         {
-            StdDraw.picture(posX, posY, "Images/tank-gauche.png", 100, 100);
-            StdDraw.picture(posX, posY + 20, "Images/canon-gauche.png", 100, 13, -rotation);
-            direction = 1;
-        }
-        else if (StdDraw.isKeyPressed(KeyEvent.VK_RIGHT))
-        {
-            StdDraw.picture(posX, posY, "Images/tank-droite.png", 100, 100);
-            StdDraw.picture(posX, posY + 20, "Images/canon-droite.png", 100, 13, rotation);
-            direction = 2;
+            rotsol = -50.0 * Math.atan(diff / 2);
         }
         else
         {
-            if(direction == 1)
-            {
-                StdDraw.picture(posX, posY, "Images/tank-gauche.png", 100, 100);
-                StdDraw.picture(posX, posY + 20, "Images/canon-gauche.png", 100, 13,-rotation);
-                if(StdDraw.isKeyPressed(KeyEvent.VK_UP) && rotation < 80)
-                {
-                    StdDraw.picture(posX, posY + 20, "Images/canon-gauche.png", 100, 13, -rotation++);
-                }
-                else if(StdDraw.isKeyPressed(KeyEvent.VK_DOWN) && rotation > -30)
-                {
-                    StdDraw.picture(posX, posY + 20, "Images/canon-gauche.png", 100, 13, -rotation--);
-                }
-            }
-            else
-            {
-                StdDraw.picture(posX, posY, "Images/tank-droite.png", 100, 100);
-                StdDraw.picture(posX, posY + 20, "Images/canon-droite.png", 100, 13, rotation);
-                if(StdDraw.isKeyPressed(KeyEvent.VK_UP) && rotation < 80)
-                {
-                    StdDraw.picture(posX, posY + 20, "Images/canon-droite.png", 100, 13, rotation++);
-                }
-                else if(StdDraw.isKeyPressed(KeyEvent.VK_DOWN) && rotation > -30)
-                {
-                    StdDraw.picture(posX, posY + 20, "Images/canon-droite.png", 100, 13, rotation--);
-                }
-            }
+            rotsol = 0;
         }
-    }
-    
-    public int getDirection()
-    {
-        return this.direction;
-    }
-    
-    public double getRotation()
-    {
-        return this.rotation;
-    }
-    
-    public void shoot() throws InterruptedException
-    {
-        if(StdDraw.isKeyPressed(KeyEvent.VK_SPACE))
+        
+        decalcanonX = -14.0 * Math.sin(rotsol * Math.PI / 180.0);
+        decalcanonY = -Math.cos(rotsol * Math.PI / 180.0);
+        
+        posY = Sol.getPosY(posX) + 18;
+        //joueur de gauche = 1 | joueur de droite = 2
+        if(x == 1)
         {
-            if(this.getDirection() == 2)
+            if(rotation + rotsol > 80)
             {
-                //Le canon est dirigé vers la droite
-                if(this.getRotation() < 0)
-                {
-                    double decaly = 50.0*Math.sin(this.getRotation()*Math.PI/180.0);
-                    StdDraw.picture(posX + 50, posY + 20 + decaly, "Images/balle.png", 10, 10);
-                }
-                else if(this.getRotation() >= 0)
-                {
-                    double decaly = 0.7 * this.getRotation();
-                    double decalx = 0.6 * this.getRotation();
-                    StdDraw.picture(posX + 50 - decalx, posY + 20 + decaly, "Images/balle.png", 10, 10);
-                    
-//                    CODE PAS BON
-//                    boolean tir = true;
-//                    int k = 0;
-//                    double vz = 50.0 * Math.sin(this.getRotation());
-//                    double posiy;
-//                    posiy = posY + 20 + decaly;
-//                    
-//                    while(tir)
-//                    {
-//                        k++;
-//                        StdDraw.picture(posX + 50 - decalx + k, -0.5 * 9.81 * k * k + vz * k + posiy, "Images/balle.png", 10, 10);
-//                        
-//                        wait(1);
-//                        if (k >= 100)
-//                        {
-//                            tir = false;
-//                        }
-//                    }
-                }
+                rotation = rotation - 2;
             }
-            else if(this.getDirection() == 1)
+            StdDraw.picture(posX, posY, "Images/tank-droite.png", 70, 70, rotsol);
+            StdDraw.picture(posX + decalcanonX, posY + 14 + decalcanonY, "Images/canon-droite.png", 70, 9, rotation + rotsol);
+        }
+        else if(x == 2)
+        {
+            if(-rotation + rotsol < -80)
             {
-                //Le canon est dirigé vers la gauche
-                if(this.getRotation() < 0)
+                rotation = rotation - 2;
+            }
+            StdDraw.picture(posX, posY, "Images/tank-gauche.png", 70, 70, rotsol);
+            StdDraw.picture(posX + decalcanonX, posY + 14 + decalcanonY, "Images/canon-gauche.png", 70, 9, -rotation + rotsol);
+        }  
+        //On réinitialise fin à false
+        fin = false;
+    }
+    
+    public void tirer(int x)
+    {
+        if(StdDraw.isKeyPressed(KeyEvent.VK_SPACE) && tirer == true)
+        {
+            tir = true;
+            i = 0;
+            //On bloque le déplacement pendant le tir
+            deplacer = false;
+        }
+        
+        if(tir == true)
+        {
+            //joueur de gauche = 1 | joueur de droite = 2
+            if(x == 1)
+            {
+                addrot = rotsol + rotation;
+                //position de départ du canon
+                posiX = 35.0 * Math.cos(addrot * Math.PI / 180.0);
+                posiY = 35.0 * Math.sin(addrot * Math.PI / 180.0);
+                StdDraw.picture(posX + decalcanonX + posiX + i, posY + 14 + decalcanonY + posiY + y(i), "Images/balle.png", 10, 10);
+                
+                if(posY + 14 + decalcanonY + posiY + y(i) <= Sol.getPosY(posX + decalcanonX + posiX + i) + 5.0)
                 {
-                    double decaly = 50.0*Math.sin(this.getRotation()*Math.PI/180.0);
-                    StdDraw.picture(posX - 50, posY + 20 + decaly, "Images/balle.png", 10, 10);
+                    solx = (int) (posX + decalcanonX + posiX + i);
+                    Sol.detruire(solx);
+                    i = 0;
+                    deplacer = true;
+                    fin = true;
+                    tir = false;
                 }
-                else if(this.getRotation() >= 0)
+                balleX = (int) (posX + decalcanonX + posiX + i);
+                balleY = (int) (posY + 14 + decalcanonY + posiY + y(i));
+            }
+            else if(x == 2)
+            {
+                addrot = -rotsol + rotation;
+                //position de départ du canon
+                posiX = -35.0 * Math.cos(addrot * Math.PI / 180.0);
+                posiY = 35.0 * Math.sin(addrot * Math.PI / 180.0);
+                StdDraw.picture(posX + decalcanonX + posiX + i, posY + 14 + decalcanonY + posiY + yy(i), "Images/balle.png", 10, 10);
+                
+                if(posY + 14 + decalcanonY + posiY + yy(i) <= Sol.getPosY(posX + decalcanonX + posiX + i) + 5.0)
                 {
-                    double decaly = 0.7 * this.getRotation();
-                    double decalx = 0.6 * this.getRotation();
-                    StdDraw.picture(posX - 50 + decalx, posY + 20 + decaly, "Images/balle.png", 10, 10);
+                    solx = (int) (posX + decalcanonX + posiX + i);
+                    Sol.detruire(solx);
+                    i = 0;
+                    deplacer = true;
+                    fin = true;
+                    tir = false;
                 }
+                balleX = (int) (posX + decalcanonX + posiX + i);
+                balleY = (int) (posY + 14 + decalcanonY + posiY + yy(i));
+            }
+            if(posX + decalcanonX + posiX + i > 999)
+            {
+                tir = false;
+                deplacer = true;
+                i = 0;
+            }
+            if(x == 1)
+            {
+                i = i + 5;
+            }
+            else if(x == 2)
+            {
+                i = i - 5;
             }
         }
+        else
+        {
+            tir = false;
+            deplacer = true;
+        }
     }
+    
+    public double y(double x)
+    {
+        return (double) (-1 * 9.81 * x * x / 2000.0 + 50.0 * Math.sin((addrot/20.0)*Math.PI/180.0) * x);     
+    }
+    
+    public double yy(double x)
+    {
+        return (double) (-1 * 9.81 * x * x / 2000.0 + 50.0 * Math.sin((-addrot/20.0)*Math.PI/180.0) * x);     
+    }
+    
+    public void afficherVie(int x)
+    {
+        if(x == 1)
+        {
+            StdDraw.setPenColor(Color.BLUE);
+            StdDraw.textLeft(0, 570, "Joueur 1");
+            StdDraw.filledRectangle(this.xVie, 540, this.vie, 10);
+            
+        }
+        else if(x == 2)
+        {
+            StdDraw.setPenColor(Color.RED);
+            StdDraw.textRight(1000, 570, "Joueur 2");
+            StdDraw.filledRectangle(this.xVie, 540, this.vie, 10);
+//            StdDraw.text(900, 520, this.vie);
+        }
+    }
+    
+    public boolean isFin() {
+        return fin;
+    }
+    
+    public int getVie() {
+        return vie;
+    }
+
+    public void setVie(int vie) {
+        this.vie = vie;
+    }
+
+    public double getPosX() {
+        return posX;
+    }
+
+    public void setPosX(double posX) {
+        this.posX = posX;
+    }
+
+    public double getPosY() {
+        return posY;
+    }
+
+    public void setPosY(double posY) {
+        this.posY = posY;
+    }
+
+    public int getxVie() {
+        return xVie;
+    }
+
+    public void setxVie(int xVie) {
+        this.xVie = xVie;
+    }
+    
 }
