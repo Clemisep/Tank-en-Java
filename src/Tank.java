@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.KeyEvent;
 
 public class Tank {
@@ -21,10 +22,13 @@ public class Tank {
     boolean tirer;
     boolean deplacer;
     boolean tir = false;
+    boolean tirCloche = false;
+    boolean tirClochePhaseBool = false;
     boolean fin = false;
     
     int i = -1;
     int solx;
+    int tirClochePhase = 1;
     
     int vie;
     int xVie;
@@ -32,6 +36,8 @@ public class Tank {
     
     int balleX;
     int balleY;
+    
+    Font name = new Font("Arial", Font.BOLD, 18);
     
     Tank(int x, int y)
     {
@@ -138,6 +144,7 @@ public class Tank {
     
     public void tirer(int x)
     {
+        //Code pour le tir simple
         if(StdDraw.isKeyPressed(KeyEvent.VK_SPACE) && tirer == true)
         {
             tir = true;
@@ -209,6 +216,100 @@ public class Tank {
             tir = false;
             deplacer = true;
         }
+        
+        //Code pour le tir en cloche
+        if(StdDraw.isKeyPressed(KeyEvent.VK_C) && tirer == true)
+        {
+            tirCloche = true;
+            i = 0;
+            //On bloque le déplacement pendant le tir
+            deplacer = false;
+        }
+        
+        if(tirCloche == true)
+        {
+            if(tirClochePhase == 1)
+            {
+                //joueur de gauche = 1 | joueur de droite = 2
+                if(x == 1)
+                {
+                    addrot = rotsol + rotation;
+                    //position de départ du canon
+                    posiX = 35.0 * Math.cos(addrot * Math.PI / 180.0);
+                    posiY = 35.0 * Math.sin(addrot * Math.PI / 180.0);
+                    StdDraw.picture(posX + decalcanonX + posiX + i, posY + 14 + decalcanonY + posiY + y(i), "Images/balle.png", 10, 10);
+
+                    if(posY + 14 + decalcanonY + posiY + y(i) <= Sol.getPosY(posX + decalcanonX + posiX + i) + 5.0)
+                    {
+                        solx = (int) (posX + decalcanonX + posiX + i);
+                        Sol.detruire(solx);
+                        i = 0;
+                        deplacer = true;
+                        fin = true;
+                        tirCloche = false;
+                    }
+                    balleX = (int) (posX + decalcanonX + posiX + i);
+                    balleY = (int) (posY + 14 + decalcanonY + posiY + y(i));
+                }
+                else if(x == 2)
+                {
+                    addrot = -rotsol + rotation;
+                    //position de départ du canon
+                    posiX = -35.0 * Math.cos(addrot * Math.PI / 180.0);
+                    posiY = 35.0 * Math.sin(addrot * Math.PI / 180.0);
+                    StdDraw.picture(posX + decalcanonX + posiX + i, posY + 14 + decalcanonY + posiY + yy(i), "Images/balle.png", 10, 10);
+
+                    if(posY + 14 + decalcanonY + posiY + yy(i) <= Sol.getPosY(posX + decalcanonX + posiX + i) + 5.0)
+                    {
+                        solx = (int) (posX + decalcanonX + posiX + i);
+                        Sol.detruire(solx);
+                        i = 0;
+                        deplacer = true;
+                        fin = true;
+                        tirCloche = false;
+                    }
+                    balleX = (int) (posX + decalcanonX + posiX + i);
+                    balleY = (int) (posY + 14 + decalcanonY + posiY + yy(i));
+                }
+                if(posX + decalcanonX + posiX + i > 999)
+                {
+                    tir = false;
+                    deplacer = true;
+                    i = 0;
+                }
+                if(x == 1)
+                {
+                    i = i + 5;
+                }
+                else if(x == 2)
+                {
+                    i = i - 5;
+                }
+            }
+            else if(tirClochePhase == 2)
+            {
+                balleY--;
+            }
+            //Changement de phase
+            if(x == 1)
+            {
+                if(posY + 14 + decalcanonY + posiY + y(i-1) == posY + 14 + decalcanonY + posiY + y(i))
+                {
+                    tirClochePhaseBool = true;
+                }
+            }
+            else if(x == 2)
+            {
+                if(posY + 14 + decalcanonY + posiY + y(i+1) == posY + 14 + decalcanonY + posiY + y(i))
+                {
+                    tirClochePhaseBool = true;
+                }
+            }
+            if(tirClochePhaseBool == true)
+            {
+                tirClochePhase = 2;
+            }
+        }
     }
     
     public double y(double x)
@@ -225,17 +326,19 @@ public class Tank {
     {
         if(x == 1)
         {
-            StdDraw.setPenColor(Color.BLUE);
+            StdDraw.setPenColor(18,77,229);
             StdDraw.textLeft(0, 570, "Joueur 1");
             StdDraw.filledRectangle(this.xVie, 540, this.vie, 10);
-            
+            StdDraw.setFont(name);
+            StdDraw.text(this.xVie, 500, Double.toString(this.vie));
         }
         else if(x == 2)
         {
-            StdDraw.setPenColor(Color.RED);
+            StdDraw.setPenColor(206,55,44);
             StdDraw.textRight(1000, 570, "Joueur 2");
             StdDraw.filledRectangle(this.xVie, 540, this.vie, 10);
-//            StdDraw.text(900, 520, this.vie);
+            StdDraw.setFont(name);
+            StdDraw.text(this.xVie, 500, Double.toString(this.vie));
         }
     }
     
@@ -244,7 +347,7 @@ public class Tank {
     }
     
     public int getVie() {
-        return vie;
+        return this.vie;
     }
 
     public void setVie(int vie) {
